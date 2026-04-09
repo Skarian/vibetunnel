@@ -32,10 +32,13 @@ if (process.env.npm_config_prefix && process.env.NVM_DIR) {
 const isDevelopment = fs.existsSync(path.join(__dirname, '..', 'src'));
 
 if (isDevelopment) {
+  require('./apply-dependency-patches.js');
   // In development, run the existing ensure-native-modules script
   require('./ensure-native-modules.js');
   return;
 }
+
+require('./apply-dependency-patches.js');
 
 // For npm package, node-pty is bundled in the package root
 // No need to create symlinks as it's accessed directly

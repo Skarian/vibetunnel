@@ -16,6 +16,9 @@ async function build() {
   console.log('Creating directories...');
   execSync('node scripts/ensure-dirs.js', { stdio: 'inherit' });
 
+  console.log('Applying dependency patches...');
+  execSync('node scripts/apply-dependency-patches.js', { stdio: 'inherit' });
+
   // Copy assets
   console.log('Copying assets...');
   execSync('node scripts/copy-assets.js', { stdio: 'inherit' });
