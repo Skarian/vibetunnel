@@ -38,6 +38,9 @@ describe('TerminalSettingsModal', () => {
 
     const themeSelect = document.querySelector('#theme-select') as HTMLSelectElement | null;
     expect(themeSelect).toBeTruthy();
+    expect(
+      Array.from(themeSelect?.options ?? []).some((option) => option.value === 'catppuccin-mocha')
+    ).toBe(true);
   });
 
   it('should not render legacy binary mode toggle', async () => {
