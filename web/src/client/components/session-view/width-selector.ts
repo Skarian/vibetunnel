@@ -1,13 +1,14 @@
 /**
  * Terminal Settings Component
  *
- * Modal for configuring terminal width, font size, and theme.
+ * Modal for configuring terminal width, font size, font family, and theme.
  * Features a grid-based layout with conditional custom width input.
  */
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Z_INDEX } from '../../utils/constants.js';
 import { createLogger } from '../../utils/logger.js';
+import { TERMINAL_FONT_OPTIONS, type TerminalFontId } from '../../utils/terminal-fonts.js';
 import {
   COMMON_TERMINAL_WIDTHS,
   TerminalPreferencesManager,
@@ -36,6 +37,7 @@ export class TerminalSettingsModal extends LitElement {
   @property({ type: Boolean }) visible = false;
   @property({ type: Number }) terminalMaxCols = 0;
   @property({ type: Number }) terminalFontSize = 14;
+  @property({ type: String }) terminalFontFamily: TerminalFontId = 'system';
 
   private _terminalTheme: TerminalThemeId = 'auto';
   @property({ type: String })
@@ -51,6 +53,7 @@ export class TerminalSettingsModal extends LitElement {
   @property({ type: Boolean }) showCustomInput = false;
   @property({ type: Function }) onWidthSelect?: (width: number) => void;
   @property({ type: Function }) onFontSizeChange?: (size: number) => void;
+  @property({ type: Function }) onFontFamilyChange?: (fontFamily: TerminalFontId) => void;
   @property({ type: Function }) onThemeChange?: (theme: TerminalThemeId) => void;
   @property({ type: Function }) onClose?: () => void;
   @property({ type: Boolean }) isMobile = false;
@@ -95,13 +98,22 @@ export class TerminalSettingsModal extends LitElement {
     super.updated(changedProperties);
 
     // Force update the theme select value when terminalTheme property changes OR when visible changes
-    if (changedProperties.has('terminalTheme') || changedProperties.has('visible')) {
+    if (
+      changedProperties.has('terminalTheme') ||
+      changedProperties.has('terminalFontFamily') ||
+      changedProperties.has('visible')
+    ) {
       // Use requestAnimationFrame to ensure DOM is fully updated
       requestAnimationFrame(() => {
         const themeSelect = this.querySelector('#theme-select') as HTMLSelectElement;
         if (themeSelect && this.terminalTheme) {
           logger.debug('Updating theme select value to:', this.terminalTheme);
           themeSelect.value = this.terminalTheme;
+        }
+
+        const fontFamilySelect = this.querySelector('#font-family-select') as HTMLSelectElement;
+        if (fontFamilySelect && this.terminalFontFamily) {
+          fontFamilySelect.value = this.terminalFontFamily;
         }
       });
     }
@@ -266,6 +278,29 @@ export class TerminalSettingsModal extends LitElement {
                 </button>
                 <div class="flex-1"></div>
               </div>
+            </div>
+
+            <!-- Font family setting -->
+            <div class="grid grid-cols-[120px_1fr] gap-4 items-center">
+              <label class="text-sm font-medium text-text-bright text-right">Font</label>
+              <select
+                id="font-family-select"
+                class="w-full bg-bg-secondary border border-border rounded-md pl-4 pr-10 py-3 text-sm font-mono text-text focus:border-primary focus:shadow-glow-sm cursor-pointer appearance-none"
+                style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22${this.getArrowColor()}%22%3e%3cpath fill-rule=%22evenodd%22 d=%22M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%22 clip-rule=%22evenodd%22/%3e%3c/svg%3e'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25em 1.25em;"
+                .value=${this.terminalFontFamily}
+                @click=${(e: Event) => e.stopPropagation()}
+                @mousedown=${(e: Event) => e.stopPropagation()}
+                @change=${(e: Event) => {
+                  e.stopPropagation();
+                  const value = (e.target as HTMLSelectElement).value as TerminalFontId;
+                  this.preferencesManager.setFontFamily(value);
+                  this.onFontFamilyChange?.(value);
+                }}
+              >
+                ${TERMINAL_FONT_OPTIONS.map(
+                  (option) => html`<option value=${option.id}>${option.label}</option>`
+                )}
+              </select>
             </div>
             
             <!-- Theme setting -->

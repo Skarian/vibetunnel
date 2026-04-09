@@ -9,6 +9,7 @@
  * - Terminal dimensions
  */
 
+import type { TerminalFontId } from '../../utils/terminal-fonts.js';
 import type { TerminalThemeId } from '../../utils/terminal-themes.js';
 
 export interface UIState {
@@ -45,6 +46,7 @@ export interface UIState {
   terminalFitHorizontally: boolean;
   terminalMaxCols: number;
   terminalFontSize: number;
+  terminalFontFamily: TerminalFontId;
   terminalTheme: TerminalThemeId;
 
   // View mode
@@ -96,6 +98,7 @@ export class UIStateManager {
     terminalFitHorizontally: false,
     terminalMaxCols: 0,
     terminalFontSize: 14,
+    terminalFontFamily: 'system',
     terminalTheme: 'auto',
 
     // View mode
@@ -224,6 +227,11 @@ export class UIStateManager {
 
   setTerminalFontSize(size: number): void {
     this.state.terminalFontSize = size;
+    this.callbacks?.requestUpdate();
+  }
+
+  setTerminalFontFamily(fontFamily: TerminalFontId): void {
+    this.state.terminalFontFamily = fontFamily;
     this.callbacks?.requestUpdate();
   }
 

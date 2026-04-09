@@ -10,6 +10,7 @@ import { HttpMethod } from '../../../shared/types.js';
 import { authClient } from '../../services/auth-client.js';
 import { terminalSocketClient } from '../../services/terminal-socket-client.js';
 import { createLogger } from '../../utils/logger.js';
+import type { TerminalFontId } from '../../utils/terminal-fonts.js';
 import type { TerminalThemeId } from '../../utils/terminal-themes.js';
 import type { Terminal } from '../terminal.js';
 import type { ConnectionManager } from './connection-manager.js';
@@ -35,6 +36,7 @@ export class TerminalLifecycleManager {
   private connected = false;
   private terminalFontSize = 14;
   private terminalMaxCols = 0;
+  private terminalFontFamily: TerminalFontId = 'system';
   private terminalTheme: TerminalThemeId = 'auto';
   private resizeTimeout: number | null = null;
   private lastResizeWidth = 0;
@@ -69,6 +71,10 @@ export class TerminalLifecycleManager {
 
   setTerminalMaxCols(maxCols: number) {
     this.terminalMaxCols = maxCols;
+  }
+
+  setTerminalFontFamily(fontFamily: TerminalFontId) {
+    this.terminalFontFamily = fontFamily;
   }
 
   setTerminalTheme(theme: TerminalThemeId) {
@@ -133,6 +139,7 @@ export class TerminalLifecycleManager {
     this.terminal.fontSize = this.terminalFontSize; // Apply saved font size preference
     this.terminal.fitHorizontally = false; // Allow natural terminal sizing
     this.terminal.maxCols = this.terminalMaxCols; // Apply saved max width preference
+    this.terminal.fontFamily = this.terminalFontFamily;
     this.terminal.theme = this.terminalTheme;
 
     if (this.eventHandlers) {

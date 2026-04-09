@@ -3,6 +3,7 @@
  *
  * Centralized definitions to prevent breaking changes when IDs or classes are modified
  */
+import { DEFAULT_TERMINAL_FONT_ID, getTerminalFontFamily } from './terminal-fonts.js';
 
 /**
  * HTML element IDs used across terminal components
@@ -19,8 +20,7 @@ export const TERMINAL_IDS = {
 /**
  * Standard terminal font family used across the application
  */
-export const TERMINAL_FONT_FAMILY =
-  'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace';
+export const TERMINAL_FONT_FAMILY = getTerminalFontFamily(DEFAULT_TERMINAL_FONT_ID);
 
 /**
  * IME input vertical offset in pixels for better alignment

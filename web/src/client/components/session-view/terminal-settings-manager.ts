@@ -4,12 +4,14 @@
  * Manages terminal configuration settings including:
  * - Terminal width/columns management
  * - Font size settings
+ * - Font family settings
  * - Theme selection
  * - Settings persistence via TerminalPreferencesManager
  */
 import type { Session } from '../../../shared/types.js';
 import { clearCharacterWidthCache } from '../../utils/cursor-position.js';
 import { createLogger } from '../../utils/logger.js';
+import type { TerminalFontId } from '../../utils/terminal-fonts.js';
 import {
   COMMON_TERMINAL_WIDTHS,
   TerminalPreferencesManager,
@@ -25,12 +27,14 @@ export interface TerminalSettingsCallbacks {
   requestUpdate: () => void;
   setTerminalMaxCols: (cols: number) => void;
   setTerminalFontSize: (size: number) => void;
+  setTerminalFontFamily: (fontFamily: TerminalFontId) => void;
   setTerminalTheme: (theme: TerminalThemeId) => void;
   setShowWidthSelector: (show: boolean) => void;
   setCustomWidth: (width: string) => void;
   getTerminalLifecycleManager: () => {
     setTerminalMaxCols: (cols: number) => void;
     setTerminalFontSize: (size: number) => void;
+    setTerminalFontFamily: (fontFamily: TerminalFontId) => void;
     setTerminalTheme: (theme: TerminalThemeId) => void;
   } | null;
 }
@@ -42,6 +46,7 @@ export class TerminalSettingsManager {
   // Current settings state
   private terminalMaxCols = 0;
   private terminalFontSize = 14;
+  private terminalFontFamily: TerminalFontId = 'system';
   private terminalTheme: TerminalThemeId = 'auto';
   private terminalFitHorizontally = false;
 
@@ -57,6 +62,7 @@ export class TerminalSettingsManager {
     if (callbacks) {
       callbacks.setTerminalMaxCols(this.terminalMaxCols);
       callbacks.setTerminalFontSize(this.terminalFontSize);
+      callbacks.setTerminalFontFamily(this.terminalFontFamily);
       callbacks.setTerminalTheme(this.terminalTheme);
     }
   }
@@ -64,10 +70,12 @@ export class TerminalSettingsManager {
   private loadPreferences(): void {
     this.terminalMaxCols = this.preferencesManager.getMaxCols();
     this.terminalFontSize = this.preferencesManager.getFontSize();
+    this.terminalFontFamily = this.preferencesManager.getFontFamily();
     this.terminalTheme = this.preferencesManager.getTheme();
     logger.debug('Loaded terminal preferences:', {
       maxCols: this.terminalMaxCols,
       fontSize: this.terminalFontSize,
+      fontFamily: this.terminalFontFamily,
       theme: this.terminalTheme,
     });
   }
@@ -79,6 +87,10 @@ export class TerminalSettingsManager {
 
   getFontSize(): number {
     return this.terminalFontSize;
+  }
+
+  getFontFamily(): TerminalFontId {
+    return this.terminalFontFamily;
   }
 
   getTheme(): TerminalThemeId {
@@ -187,6 +199,28 @@ export class TerminalSettingsManager {
     }
   }
 
+  // Font family management
+  handleFontFamilyChange(newFontFamily: TerminalFontId): void {
+    if (!this.callbacks) return;
+
+    this.terminalFontFamily = newFontFamily;
+    this.preferencesManager.setFontFamily(newFontFamily);
+    this.callbacks.setTerminalFontFamily(newFontFamily);
+
+    clearCharacterWidthCache();
+
+    const lifecycleManager = this.callbacks.getTerminalLifecycleManager();
+    if (lifecycleManager) {
+      lifecycleManager.setTerminalFontFamily(newFontFamily);
+    }
+
+    const terminal = this.callbacks.getTerminalElement();
+    if (terminal) {
+      terminal.fontFamily = newFontFamily;
+      terminal.requestUpdate();
+    }
+  }
+
   // Theme management
   handleThemeChange(newTheme: TerminalThemeId): void {
     if (!this.callbacks) return;
@@ -245,6 +279,7 @@ export class TerminalSettingsManager {
   initializeTerminal(terminal: Terminal): void {
     terminal.maxCols = this.terminalMaxCols;
     terminal.fontSize = this.terminalFontSize;
+    terminal.fontFamily = this.terminalFontFamily;
     terminal.theme = this.terminalTheme;
   }
 }

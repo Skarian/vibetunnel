@@ -7,6 +7,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Session } from '../../../shared/types.js';
+import type { TerminalFontId } from '../../utils/terminal-fonts.js';
 import type { TerminalThemeId } from '../../utils/terminal-themes.js';
 import '../terminal.js';
 
@@ -29,6 +30,7 @@ export class TerminalRenderer extends LitElement {
   @property({ type: Object }) session: Session | null = null;
   @property({ type: Number }) terminalFontSize = 14;
   @property({ type: Number }) terminalMaxCols = 0;
+  @property({ type: String }) terminalFontFamily: TerminalFontId = 'system';
   @property({ type: String }) terminalTheme: TerminalThemeId = 'auto';
   @property({ type: Boolean }) disableClick = false;
   @property({ type: Boolean }) hideScrollButton = false;
@@ -55,6 +57,7 @@ export class TerminalRenderer extends LitElement {
         .fontSize=${this.terminalFontSize}
         .fitHorizontally=${false}
         .maxCols=${this.terminalMaxCols}
+        .fontFamily=${this.terminalFontFamily}
         .theme=${this.terminalTheme}
         .initialCols=${this.session.initialCols || 0}
         .initialRows=${this.session.initialRows || 0}

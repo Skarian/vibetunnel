@@ -8,6 +8,7 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Session } from '../../../shared/types.js';
 import { Z_INDEX } from '../../utils/constants.js';
+import type { TerminalFontId } from '../../utils/terminal-fonts.js';
 import type { TerminalThemeId } from '../../utils/terminal-themes.js';
 import type { UIState } from './ui-state-manager.js';
 import './ctrl-alpha-overlay.js';
@@ -36,6 +37,7 @@ export interface OverlaysCallbacks {
   // Terminal settings
   onWidthSelect: (width: number) => void;
   onFontSizeChange: (size: number) => void;
+  onFontFamilyChange: (fontFamily: TerminalFontId) => void;
   onThemeChange: (theme: TerminalThemeId) => void;
   onCloseWidthSelector: () => void;
 
@@ -160,11 +162,13 @@ export class OverlaysContainer extends LitElement {
         .visible=${this.uiState.showWidthSelector}
         .terminalMaxCols=${this.uiState.terminalMaxCols}
         .terminalFontSize=${this.uiState.terminalFontSize}
+        .terminalFontFamily=${this.uiState.terminalFontFamily}
         .terminalTheme=${this.uiState.terminalTheme}
         .customWidth=${this.uiState.customWidth}
         .isMobile=${this.uiState.isMobile}
         .onWidthSelect=${this.callbacks.onWidthSelect}
         .onFontSizeChange=${this.callbacks.onFontSizeChange}
+        .onFontFamilyChange=${this.callbacks.onFontFamilyChange}
         .onThemeChange=${this.callbacks.onThemeChange}
         .onClose=${this.callbacks.onCloseWidthSelector}
       ></terminal-settings-modal>
