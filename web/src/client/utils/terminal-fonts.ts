@@ -1,6 +1,7 @@
 export const TERMINAL_FONT_OPTIONS = [
   { id: 'system', label: 'System Monospace' },
   { id: 'fira-code', label: 'Fira Code (Bundled)' },
+  { id: 'fira-code-nerd', label: 'Fira Code Nerd Font Mono (Bundled)' },
   { id: 'hack-nerd', label: 'Hack Nerd Font Mono (Bundled)' },
   { id: 'sf-mono', label: 'SF Mono' },
   { id: 'menlo', label: 'Menlo' },
@@ -18,6 +19,7 @@ const SYSTEM_TERMINAL_FONT_STACK =
 const TERMINAL_FONT_FAMILIES: Record<TerminalFontId, string> = {
   system: SYSTEM_TERMINAL_FONT_STACK,
   'fira-code': `"Fira Code", ${SYSTEM_TERMINAL_FONT_STACK}`,
+  'fira-code-nerd': `"Fira Code Nerd Font Mono", "Fira Code", ${SYSTEM_TERMINAL_FONT_STACK}`,
   'hack-nerd': `"Hack Nerd Font Mono", "Fira Code", ${SYSTEM_TERMINAL_FONT_STACK}`,
   'sf-mono': `"SF Mono", SFMono-Regular, ${SYSTEM_TERMINAL_FONT_STACK}`,
   menlo: `"Menlo", ${SYSTEM_TERMINAL_FONT_STACK}`,
@@ -27,6 +29,7 @@ const TERMINAL_FONT_FAMILIES: Record<TerminalFontId, string> = {
 
 const TERMINAL_FONT_LOAD_FACES: Partial<Record<TerminalFontId, string>> = {
   'fira-code': 'Fira Code',
+  'fira-code-nerd': 'Fira Code Nerd Font Mono',
   'hack-nerd': 'Hack Nerd Font Mono',
 };
 
