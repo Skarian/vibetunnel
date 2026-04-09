@@ -3,8 +3,8 @@
  */
 import { TERMINAL_FONT_FAMILY, TERMINAL_IDS } from './terminal-constants.js';
 
-// Cache for character width measurements per font size
-const charWidthCache = new Map<number, number>();
+// Cache for character width measurements per font size and family
+const charWidthCache = new Map<string, number>();
 
 /**
  * Measure character width for a given font size, with caching
@@ -12,10 +12,12 @@ const charWidthCache = new Map<number, number>();
  * @param container - Container element to append test element to
  * @returns Character width in pixels
  */
-function measureCharacterWidth(fontSize: number, container: Element): number {
+function measureCharacterWidth(fontSize: number, fontFamily: string, container: Element): number {
+  const cacheKey = `${fontSize}:${fontFamily}`;
+
   // Return cached value if available
-  if (charWidthCache.has(fontSize)) {
-    const cachedWidth = charWidthCache.get(fontSize);
+  if (charWidthCache.has(cacheKey)) {
+    const cachedWidth = charWidthCache.get(cacheKey);
     if (cachedWidth !== undefined) {
       return cachedWidth;
     }
@@ -26,7 +28,7 @@ function measureCharacterWidth(fontSize: number, container: Element): number {
   testElement.style.position = 'absolute';
   testElement.style.visibility = 'hidden';
   testElement.style.fontSize = `${fontSize}px`;
-  testElement.style.fontFamily = TERMINAL_FONT_FAMILY;
+  testElement.style.fontFamily = fontFamily;
   testElement.textContent = '0';
 
   try {
@@ -34,7 +36,7 @@ function measureCharacterWidth(fontSize: number, container: Element): number {
     const charWidth = testElement.getBoundingClientRect().width;
 
     // Cache the measurement
-    charWidthCache.set(fontSize, charWidth);
+    charWidthCache.set(cacheKey, charWidth);
     return charWidth;
   } finally {
     // Ensure cleanup even if measurement fails
@@ -64,7 +66,8 @@ export function calculateCursorPosition(
   cursorY: number,
   fontSize: number,
   container: Element,
-  sessionStatus: string
+  sessionStatus: string,
+  fontFamily = TERMINAL_FONT_FAMILY
 ): { x: number; y: number } | null {
   if (sessionStatus !== 'running') {
     return null;
@@ -79,7 +82,7 @@ export function calculateCursorPosition(
     const lineHeight = fontSize * 1.2;
 
     // Get character width with caching
-    const charWidth = measureCharacterWidth(fontSize, container);
+    const charWidth = measureCharacterWidth(fontSize, fontFamily, container);
 
     // Calculate cursor position within the terminal container
     const terminalRect = container.getBoundingClientRect();

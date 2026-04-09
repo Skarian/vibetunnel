@@ -320,6 +320,18 @@ export class InputManager {
 
         return 14; // Default font size
       },
+      getFontFamily: () => {
+        const terminalElement = this.callbacks?.getTerminalElement?.();
+        if (!terminalElement) {
+          return undefined;
+        }
+
+        if ('getFontFamily' in terminalElement && typeof terminalElement.getFontFamily === 'function') {
+          return terminalElement.getFontFamily();
+        }
+
+        return undefined;
+      },
       autoFocus: true,
     });
   }
@@ -798,6 +810,18 @@ export class InputManager {
         }
 
         return 14; // Default font size
+      },
+      getFontFamily: () => {
+        const terminalElement = this.callbacks?.getTerminalElement?.();
+        if (!terminalElement) {
+          return undefined;
+        }
+
+        if ('getFontFamily' in terminalElement && typeof terminalElement.getFontFamily === 'function') {
+          return terminalElement.getFontFamily();
+        }
+
+        return undefined;
       },
       autoFocus: true,
     });

@@ -26,6 +26,8 @@ export interface DesktopIMEInputOptions {
   getCursorInfo?: () => { x: number; y: number } | null;
   /** Optional callback to get font size from terminal */
   getFontSize?: () => number;
+  /** Optional callback to get font family from terminal */
+  getFontFamily?: () => string;
   /** Whether to auto-focus the input on creation */
   autoFocus?: boolean;
   /** Additional class name for the input element */
@@ -74,7 +76,7 @@ export class DesktopIMEInput {
     input.style.opacity = '1';
     input.style.visibility = 'visible';
     input.style.pointerEvents = 'auto';
-    input.style.fontFamily = TERMINAL_FONT_FAMILY;
+    input.style.fontFamily = this.options.getFontFamily?.() || TERMINAL_FONT_FAMILY;
     input.style.outline = 'none';
     input.style.caretColor = 'transparent'; // Hide the blinking cursor
     input.autocapitalize = 'off';
@@ -385,6 +387,7 @@ export class DesktopIMEInput {
   updateFontSize(): void {
     const fontSize = this.options.getFontSize?.() || 14;
     this.input.style.fontSize = `${fontSize}px`;
+    this.input.style.fontFamily = this.options.getFontFamily?.() || TERMINAL_FONT_FAMILY;
     logger.log(`Updated IME input font size to ${fontSize}px`);
   }
 
