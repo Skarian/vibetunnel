@@ -12,7 +12,14 @@ import { FitAddon, Ghostty, Terminal as GhosttyTerminal } from 'ghostty-web';
 import { html, LitElement, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { createLogger } from '../utils/logger.js';
-import { TERMINAL_FONT_FAMILY, TERMINAL_IDS } from '../utils/terminal-constants.js';
+import { clearCharacterWidthCache } from '../utils/cursor-position.js';
+import { TERMINAL_IDS } from '../utils/terminal-constants.js';
+import {
+  DEFAULT_TERMINAL_FONT_ID,
+  getTerminalFontFamily,
+  getTerminalFontLoadFace,
+  type TerminalFontId,
+} from '../utils/terminal-fonts.js';
 import { TerminalPreferencesManager } from '../utils/terminal-preferences.js';
 import { TERMINAL_THEMES, type TerminalThemeId } from '../utils/terminal-themes.js';
 import { getCurrentTheme } from '../utils/theme-utils.js';
@@ -46,6 +53,7 @@ export class Terminal extends LitElement {
   @property({ type: Number }) fontSize = 14;
   @property({ type: Boolean }) fitHorizontally = false;
   @property({ type: Number }) maxCols = 0; // 0 = unlimited
+  @property({ type: String }) fontFamily: TerminalFontId = DEFAULT_TERMINAL_FONT_ID;
   @property({ type: String }) theme: TerminalThemeId = 'auto';
   @property({ type: Boolean }) disableClick = false;
   @property({ type: Boolean }) hideScrollButton = false;
@@ -73,9 +81,11 @@ export class Terminal extends LitElement {
 
   private pendingResizeSource: string | null = null;
   private pendingResizePrev: { cols: number; rows: number } | null = null;
+  private fontLoadGeneration = 0;
 
   connectedCallback() {
     const prefs = TerminalPreferencesManager.getInstance();
+    this.fontFamily = prefs.getFontFamily();
     this.theme = prefs.getTheme();
     super.connectedCallback();
 
@@ -122,6 +132,13 @@ export class Terminal extends LitElement {
       if (!this.fitHorizontally) this.originalFontSize = this.fontSize;
       this.applyFontSize();
       this.requestResize('font-size-change');
+    }
+
+    if (changed.has('fontFamily')) {
+      this.fontLoadGeneration += 1;
+      this.applyFontFamily();
+      this.syncAfterFontLoad();
+      this.watchTerminalFontLoad();
     }
 
     if (changed.has('fitHorizontally')) {
@@ -211,6 +228,10 @@ export class Terminal extends LitElement {
     return this.rows;
   }
 
+  public getFontFamily(): string {
+    return this.getResolvedFontFamily();
+  }
+
   public getBufferSize(): number {
     if (!this.terminal) return 0;
     return this.terminal.buffer.active.length;
@@ -255,6 +276,7 @@ export class Terminal extends LitElement {
   }
 
   private cleanup() {
+    this.fontLoadGeneration += 1;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
 
@@ -277,6 +299,41 @@ export class Terminal extends LitElement {
   private applyFontSize() {
     if (!this.terminal) return;
     this.terminal.options.fontSize = this.fontSize;
+  }
+
+  private applyFontFamily() {
+    if (!this.terminal) return;
+    this.terminal.options.fontFamily = this.getResolvedFontFamily();
+  }
+
+  private syncAfterFontLoad() {
+    clearCharacterWidthCache();
+    this.requestResize('font-face-load');
+  }
+
+  private watchTerminalFontLoad() {
+    if (typeof document === 'undefined' || !('fonts' in document)) return;
+
+    const fontFace = getTerminalFontLoadFace(this.fontFamily);
+    if (!fontFace) return;
+
+    const generation = ++this.fontLoadGeneration;
+    const fontFaceSet = document.fonts;
+    const fontSpec = `400 ${this.fontSize}px "${fontFace}"`;
+
+    fontFaceSet
+      .load(fontSpec)
+      .then(() => {
+        if (generation !== this.fontLoadGeneration || !this.terminal) return;
+        this.syncAfterFontLoad();
+      })
+      .catch((error) => {
+        logger.warn('failed to load terminal webfont', { error, fontSpec });
+      });
+  }
+
+  public getResolvedFontFamily(): string {
+    return getTerminalFontFamily(this.fontFamily);
   }
 
   private getResolvedTheme() {
@@ -379,7 +436,7 @@ export class Terminal extends LitElement {
         cols: this.cols,
         rows: this.rows,
         fontSize: this.fontSize,
-        fontFamily: TERMINAL_FONT_FAMILY,
+        fontFamily: this.getResolvedFontFamily(),
         theme: this.getResolvedTheme(),
         cursorBlink: true,
         smoothScrollDuration: 120,
@@ -455,6 +512,9 @@ export class Terminal extends LitElement {
       // Observe container resizes
       this.resizeObserver = new ResizeObserver(() => this.requestResize('resize-observer'));
       this.resizeObserver.observe(this.container);
+
+      // Re-measure once the bundled terminal font is ready.
+      this.watchTerminalFontLoad();
     } catch (error) {
       logger.error('failed to initialize ghostty terminal', error);
     }
@@ -568,7 +628,7 @@ export class Terminal extends LitElement {
           width: 100%;
           height: 100%;
           overflow: hidden;
-          font-family: ${TERMINAL_FONT_FAMILY};
+          font-family: ${this.getResolvedFontFamily()};
           touch-action: manipulation;
           -webkit-user-select: text;
           user-select: text;
@@ -589,7 +649,7 @@ export class Terminal extends LitElement {
           z-index: 20;
         }
         .scroll-to-bottom button {
-          font-family: ${TERMINAL_FONT_FAMILY};
+          font-family: ${this.getResolvedFontFamily()};
           background: rgba(0, 0, 0, 0.55);
           color: #fff;
           border: 1px solid rgba(255, 255, 255, 0.18);

@@ -25,6 +25,7 @@ import { GitService } from '../services/git-service.js';
 import { Z_INDEX } from '../utils/constants.js';
 import { createLogger } from '../utils/logger.js';
 import { TERMINAL_IDS } from '../utils/terminal-constants.js';
+import type { TerminalFontId } from '../utils/terminal-fonts.js';
 import type { TerminalThemeId } from '../utils/terminal-themes.js';
 // Manager imports
 import { ConnectionManager } from './session-view/connection-manager.js';
@@ -201,6 +202,8 @@ export class SessionView extends LitElement {
       getTerminalElement: () => this.getTerminalElement(),
       setTerminalMaxCols: (cols: number) => this.uiStateManager.setTerminalMaxCols(cols),
       setTerminalFontSize: (size: number) => this.uiStateManager.setTerminalFontSize(size),
+      setTerminalFontFamily: (fontFamily: TerminalFontId) =>
+        this.uiStateManager.setTerminalFontFamily(fontFamily),
       setTerminalTheme: (theme: TerminalThemeId) => this.uiStateManager.setTerminalTheme(theme),
       setShowWidthSelector: (show: boolean) => this.uiStateManager.setShowWidthSelector(show),
       setCustomWidth: (width: string) => this.uiStateManager.setCustomWidth(width),
@@ -386,13 +389,16 @@ export class SessionView extends LitElement {
     // Load terminal preferences
     const maxCols = this.terminalSettingsManager.getMaxCols();
     const fontSize = this.terminalSettingsManager.getFontSize();
+    const fontFamily = this.terminalSettingsManager.getFontFamily();
     const theme = this.terminalSettingsManager.getTheme();
     this.uiStateManager.setTerminalMaxCols(maxCols);
     this.uiStateManager.setTerminalFontSize(fontSize);
+    this.uiStateManager.setTerminalFontFamily(fontFamily);
     this.uiStateManager.setTerminalTheme(theme);
     logger.debug('Loaded terminal theme:', theme);
     this.terminalLifecycleManager.setTerminalFontSize(fontSize);
     this.terminalLifecycleManager.setTerminalMaxCols(maxCols);
+    this.terminalLifecycleManager.setTerminalFontFamily(fontFamily);
     this.terminalLifecycleManager.setTerminalTheme(theme);
 
     // Initialize lifecycle event manager
@@ -1117,7 +1123,6 @@ export class SessionView extends LitElement {
             max-width: 100vw;
             position: relative;
             background-color: rgb(var(--color-bg));
-            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
             overflow: hidden;
             overscroll-behavior: none;
             touch-action: none;
@@ -1201,7 +1206,6 @@ export class SessionView extends LitElement {
             overscroll-behavior: none !important;
             touch-action: none !important;
             background-color: rgb(var(--color-bg)) !important;
-            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
           }
           
           .session-header-area {
@@ -1386,6 +1390,7 @@ export class SessionView extends LitElement {
                   .session=${this.session}
                   .terminalFontSize=${uiState.terminalFontSize}
                   .terminalMaxCols=${uiState.terminalMaxCols}
+                  .terminalFontFamily=${uiState.terminalFontFamily}
                   .terminalTheme=${uiState.terminalTheme}
                   .disableClick=${uiState.isMobile && uiState.useDirectKeyboard}
                   .hideScrollButton=${uiState.showQuickKeys}
@@ -1402,6 +1407,7 @@ export class SessionView extends LitElement {
                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; ${uiState.chatMode ? '' : 'display: none; pointer-events: none;'}"
                   .active=${uiState.chatMode}
                   .sessionId=${this.session?.id ?? ''}
+                  .terminalFontFamily=${uiState.terminalFontFamily}
                   .pendingInput=${this.inputManager?.getPendingInput() ?? ''}
                   .onSend=${(data: string) => this.inputManager?.sendInputText(data)}
                   .onPendingInputChange=${(input: string) => this.inputManager?.setPendingInput(input)}
@@ -1509,6 +1515,8 @@ export class SessionView extends LitElement {
           this.terminalSettingsManager.handleWidthSelect(width),
         onFontSizeChange: (size: number) =>
           this.terminalSettingsManager.handleFontSizeChange(size),
+        onFontFamilyChange: (fontFamily: TerminalFontId) =>
+          this.terminalSettingsManager.handleFontFamilyChange(fontFamily),
         onThemeChange: (theme: TerminalThemeId) =>
           this.terminalSettingsManager.handleThemeChange(theme),
         onCloseWidthSelector: () => {

@@ -17,6 +17,7 @@ describe('TerminalSettingsModal', () => {
         .visible=${true}
         .terminalMaxCols=${80}
         .terminalFontSize=${14}
+        .terminalFontFamily=${'system'}
         .terminalTheme=${'auto'}
       ></terminal-settings-modal>
     `);
@@ -26,11 +27,14 @@ describe('TerminalSettingsModal', () => {
     localStorage.clear();
   });
 
-  it('should render width, font size, and theme controls', async () => {
+  it('should render width, font size, font family, and theme controls', async () => {
     await element.updateComplete;
 
     const widthSelect = document.querySelector('select') as HTMLSelectElement | null;
     expect(widthSelect).toBeTruthy();
+
+    const fontFamilySelect = document.querySelector('#font-family-select') as HTMLSelectElement | null;
+    expect(fontFamilySelect).toBeTruthy();
 
     const themeSelect = document.querySelector('#theme-select') as HTMLSelectElement | null;
     expect(themeSelect).toBeTruthy();

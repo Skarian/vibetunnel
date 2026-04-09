@@ -5,6 +5,11 @@
 
 import { createLogger } from './logger.js';
 import { detectMobile } from './mobile-utils.js';
+import {
+  DEFAULT_TERMINAL_FONT_ID,
+  isTerminalFontId,
+  type TerminalFontId,
+} from './terminal-fonts.js';
 import type { TerminalThemeId } from './terminal-themes.js';
 
 const logger = createLogger('terminal-preferences');
@@ -12,6 +17,7 @@ const logger = createLogger('terminal-preferences');
 export interface TerminalPreferences {
   maxCols: number; // 0 means no limit, positive numbers set max width
   fontSize: number;
+  fontFamily: TerminalFontId;
   fitHorizontally: boolean;
   theme: TerminalThemeId;
 }
@@ -29,6 +35,7 @@ export const COMMON_TERMINAL_WIDTHS = [
 const DEFAULT_PREFERENCES: TerminalPreferences = {
   maxCols: 0, // No limit by default - take as much as possible
   fontSize: detectMobile() ? 12 : 14, // 12px on mobile, 14px on desktop
+  fontFamily: DEFAULT_TERMINAL_FONT_ID,
   fitHorizontally: false,
   theme: 'dracula',
 };
@@ -55,8 +62,11 @@ export class TerminalPreferencesManager {
       const saved = localStorage.getItem(STORAGE_KEY_TERMINAL_PREFS);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const fontFamily = isTerminalFontId(parsed.fontFamily)
+          ? parsed.fontFamily
+          : DEFAULT_TERMINAL_FONT_ID;
         // Merge with defaults to handle new properties
-        const merged = { ...DEFAULT_PREFERENCES, ...parsed };
+        const merged = { ...DEFAULT_PREFERENCES, ...parsed, fontFamily };
         logger.debug('Loaded terminal preferences:', merged);
         return merged;
       }
@@ -92,6 +102,15 @@ export class TerminalPreferencesManager {
 
   setFontSize(fontSize: number) {
     this.preferences.fontSize = Math.max(8, Math.min(32, fontSize)); // Reasonable bounds
+    this.savePreferences();
+  }
+
+  getFontFamily(): TerminalFontId {
+    return this.preferences.fontFamily;
+  }
+
+  setFontFamily(fontFamily: TerminalFontId) {
+    this.preferences.fontFamily = fontFamily;
     this.savePreferences();
   }
 

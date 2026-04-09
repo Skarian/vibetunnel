@@ -1,6 +1,11 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { createLogger } from '../utils/logger.js';
+import {
+  DEFAULT_TERMINAL_FONT_ID,
+  getTerminalFontFamily,
+  type TerminalFontId,
+} from '../utils/terminal-fonts.js';
 
 const logger = createLogger('terminal-chat-view');
 
@@ -24,7 +29,7 @@ export class TerminalChatView extends LitElement {
       height: 100%;
       width: 100%;
       background-color: rgb(var(--color-bg));
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      font-family: var(--terminal-font-family, ui-monospace, monospace);
       position: relative;
       z-index: 10;
       pointer-events: auto !important; /* Ensure interactions work */
@@ -192,7 +197,7 @@ export class TerminalChatView extends LitElement {
     }
 
     .message-path {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+      font-family: var(--terminal-font-family, ui-monospace, monospace);
       opacity: 0.8;
       color: rgb(var(--color-primary));
       font-size: 0.65rem;
@@ -374,6 +379,7 @@ export class TerminalChatView extends LitElement {
   @property({ type: Boolean }) active = false;
   @property({ type: String }) pendingInput = '';
   @property({ type: String }) sessionId = '';
+  @property({ type: String }) terminalFontFamily: TerminalFontId = DEFAULT_TERMINAL_FONT_ID;
   private outputUnsubscribe?: () => void;
   private syncInterval?: ReturnType<typeof setInterval>;
   private lastInputTime = 0;
@@ -391,6 +397,7 @@ export class TerminalChatView extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.applyFontFamily();
     // Subscribe to terminal output when connected
     if (this.subscribeToOutput) {
       this.outputUnsubscribe = this.subscribeToOutput((data: string) => {
@@ -506,6 +513,9 @@ export class TerminalChatView extends LitElement {
 
   updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
+    if (changedProperties.has('terminalFontFamily')) {
+      this.applyFontFamily();
+    }
     if (changedProperties.has('messages')) {
       this.scrollToBottom();
     }
@@ -571,6 +581,10 @@ export class TerminalChatView extends LitElement {
     // The chat input is the "source of truth" while the user is typing.
     // Syncing from pendingInput (which comes from terminal) would overwrite
     // accented characters that the terminal might not render correctly.
+  }
+
+  private applyFontFamily() {
+    this.style.setProperty('--terminal-font-family', getTerminalFontFamily(this.terminalFontFamily));
   }
 
   private processTerminalOutput(data: string) {

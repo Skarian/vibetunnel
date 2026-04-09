@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { calculateCursorPosition, clearCharacterWidthCache } from './cursor-position.js';
-import { TERMINAL_IDS } from './terminal-constants.js';
+import { TERMINAL_FONT_FAMILY, TERMINAL_IDS } from './terminal-constants.js';
 
 describe('cursor-position', () => {
   let mockContainer: HTMLElement;
@@ -220,9 +220,7 @@ describe('cursor-position', () => {
       calculateCursorPosition(1, 1, fontSize, mockContainer, 'running');
 
       expect(createElementSpy).toHaveBeenCalledWith('span');
-      expect(testElement.style.fontFamily).toBe(
-        'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
-      );
+      expect(testElement.style.fontFamily).toBe(TERMINAL_FONT_FAMILY);
       expect(testElement.style.fontSize).toBe('14px');
       expect(testElement.textContent).toBe('0');
     });

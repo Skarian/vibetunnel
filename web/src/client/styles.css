@@ -839,6 +839,23 @@
   font-variation-settings: 'wght' 400;
 }
 
+/* Fira Code Nerd Font Mono */
+@font-face {
+  font-family: 'Fira Code Nerd Font Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/FiraCodeNerdFontMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Fira Code Nerd Font Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/FiraCodeNerdFontMono-Bold.ttf') format('truetype');
+}
+
 /* Hack Nerd Font */
 @font-face {
   font-family: 'Hack Nerd Font Mono';
